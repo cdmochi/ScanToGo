@@ -117,9 +117,16 @@ class MainActivity : AppCompatActivity() {
                         )
                     ).responseString { request, response, result ->
                         if(response.statusCode == 200) {
-                            alert("Successful: ${result.component1().toString()}").show()
+                            alert("Successful: ${result.component1().toString()}") {
+                                positiveButton("DISMISS") {
+                                    it.dismiss()
+                                }
+                            }
                         } else {
-                            alert("Failed: ${result.component1().toString()}").show()
+                            alert("Failed: ${result.component1().toString()}")
+                                .positiveButton("DISMISS") {
+                                    it.dismiss()
+                                }
                         }
                     }
 
