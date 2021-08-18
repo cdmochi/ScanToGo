@@ -1,4 +1,4 @@
-QRCode Scanner 
+#QRCode Scanner 
 The project is a QRCode Scanner created from CameraX + MLKit from google.
 
 ## Features
