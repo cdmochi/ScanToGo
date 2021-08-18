@@ -105,7 +105,7 @@ class MainActivity : AppCompatActivity() {
     private fun callApi() {
         with(binding) {
             if(etApiText.editText?.text!!.isEmpty()) {
-                alert("API Field is Empty!").show()
+                toast("API Field is Empty!").show()
             } else {
                 val BASE_URL = etApiText.editText?.text.toString()
                 Fuel.post(BASE_URL)
