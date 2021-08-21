@@ -6,6 +6,7 @@ import android.content.ContentValues.TAG
 import android.content.DialogInterface
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.nfc.Tag
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -41,6 +42,9 @@ class MainActivity : AppCompatActivity() {
             toast("Permissions Denied").show()
         }
     }
+    private val webIntent: Intent by lazy { Intent(Intent.ACTION_VIEW, Uri.parse(qrCodeContent)) }
+
+    private var qrCodeContent = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,10 +78,14 @@ class MainActivity : AppCompatActivity() {
                 .build()
                 .also {
                     it.setAnalyzer(ContextCompat.getMainExecutor(this), QRScannerAnalyzer(
-                        onQRScannedSuccessful = {
+                        onQRScannedSuccessful = { qrCodeContent ->
                             runOnUiThread {
-                                //api
-                                callApi()
+                                if(qrCodeContent.contains("http://") || qrCodeContent.contains("https://") ) {
+                                    this.qrCodeContent = qrCodeContent
+                                    startActivity(webIntent)
+                                } else {
+                                    toast("$qrCodeContent").show()
+                                }
                             }
                         },
                         onQRScannedFailed = {

@@ -62,4 +62,5 @@ dependencies {
     //Fuel
     implementation "com.github.kittinunf.fuel:fuel:1.16.0"
 
+    implementation 'androidx.core:core-ktx:1.2.0'
 }
