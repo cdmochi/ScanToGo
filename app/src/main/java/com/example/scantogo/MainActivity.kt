@@ -2,15 +2,12 @@ package com.example.scantogo
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.ContentValues.TAG
-import android.content.DialogInterface
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.nfc.Tag
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
@@ -18,21 +15,21 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.core.content.ContextCompat
-import com.example.scantogo.Analyzer.QRScannerAnalyzer
+import androidx.core.view.isVisible
+import androidx.lifecycle.Observer
+import com.example.scantogo.analyzer.QRScannerAnalyzer
 import com.example.scantogo.databinding.ActivityMainBinding
-import com.github.kittinunf.fuel.Fuel
+import com.example.scantogo.presentation.result_sheet.ResultBottomSheetDialog
 import com.google.mlkit.vision.barcode.Barcode
-import com.google.mlkit.vision.barcode.BarcodeScannerOptions
 import org.jetbrains.anko.alert
-import org.jetbrains.anko.progressDialog
+import org.jetbrains.anko.startActivityForResult
 import org.jetbrains.anko.toast
 import java.lang.Exception
-import java.util.concurrent.Executor
-import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity() {
 
     private val binding: ActivityMainBinding by lazy { ActivityMainBinding.inflate(layoutInflater) }
+    private var isFlashOn = false
 
     private val cameraPermissionRequest = registerForActivityResult(ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
@@ -42,14 +39,25 @@ class MainActivity : AppCompatActivity() {
             toast("Permissions Denied").show()
         }
     }
-    private val webIntent: Intent by lazy { Intent(Intent.ACTION_VIEW, Uri.parse(qrCodeContent)) }
 
-    private var qrCodeContent = ""
+    private val playStoreRequest = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+
+    }
+
+    private val startForResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        startCamera()
+    }
+
+    private val playStoreIntent: Intent by lazy { Intent(Intent.ACTION_VIEW, Uri.parse("market://search?q=<seach_query>&c=apps")) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+        initPermissions()
+        initViews()
+    }
 
+    private fun initPermissions() {
         when (PackageManager.PERMISSION_GRANTED) {
             ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) -> {
                 startCamera()
@@ -60,8 +68,15 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun initViews() {
+        with(binding) {
+            ivFlashSwitch.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.ic_flash_off))
+            ivFlashSwitch.isVisible = false
+        }
+    }
+
     @SuppressLint("MissingPermission")
-    private fun startCamera() {
+    fun startCamera() {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(this)
         val cameraProvider: ProcessCameraProvider = cameraProviderFuture.get()
 
@@ -78,13 +93,14 @@ class MainActivity : AppCompatActivity() {
                 .build()
                 .also {
                     it.setAnalyzer(ContextCompat.getMainExecutor(this), QRScannerAnalyzer(
-                        onQRScannedSuccessful = { qrCodeContent ->
+                        onQRScannedSuccessful = { qrCodeContent, type ->
                             runOnUiThread {
-                                if(qrCodeContent.contains("http://") || qrCodeContent.contains("https://") ) {
-                                    this.qrCodeContent = qrCodeContent
-                                    startActivity(webIntent)
+                                if(type == Barcode.TYPE_URL) {
+                                    resolveUrl(qrCodeContent)
+                                    cameraProvider.unbindAll()
                                 } else {
-                                    toast("$qrCodeContent").show()
+                                    ResultBottomSheetDialog.newInstance(qrCodeContent).show(supportFragmentManager, "")
+                                    cameraProvider.unbindAll()
                                 }
                             }
                         },
@@ -96,13 +112,30 @@ class MainActivity : AppCompatActivity() {
 
             try {
                 cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(
+                val camera = cameraProvider.bindToLifecycle(
                     this,
                     cameraSelector,
                     imageCapture,
                     preview,
                     imageAnalyzer
                 )
+
+                with(binding) {
+                    when {
+                        camera.cameraInfo.hasFlashUnit() -> {
+                            binding.ivFlashSwitch.isVisible = true
+                            ivFlashSwitch.setOnClickListener {
+                                isFlashOn = !isFlashOn
+                                setFlashlightViewState(isFlashOn)
+                                camera.cameraControl.enableTorch(isFlashOn)
+                            }
+                            setFlashlightViewState(isFlashOn)
+                        }
+                        else -> {
+                            ivFlashSwitch.isVisible = false
+                        }
+                    }
+                }
             } catch (exception: Exception) {
                 throw(exception)
             }
@@ -110,44 +143,27 @@ class MainActivity : AppCompatActivity() {
         }, ContextCompat.getMainExecutor(this))
     }
 
-    private fun callApi() {
-        with(binding) {
-            if(etApiText.editText?.text!!.isEmpty()) {
-                toast("API Field is Empty!").show()
-            } else {
-                val BASE_URL = etApiText.editText?.text.toString()
-                Fuel.post(BASE_URL)
-                    .body(
-                        createMock(
-                            payAmount = 1000.toFloat(),
-                            userId = 1.toLong(),
-                            rentingTranId = 1.toLong()
-                        )
-                    ).responseString { request, response, result ->
-                        if(response.statusCode == 200) {
-                            alert("Successful: ${result.component1().toString()}") {
-                                positiveButton("DISMISS") {
-                                    it.dismiss()
-                                }
-                            }
-                        } else {
-                            alert("Failed: ${result.component1().toString()}")
-                                .positiveButton("DISMISS") {
-                                    it.dismiss()
-                                }
-                        }
-                    }
-
+    private fun resolveUrl(url: String) {
+        try {
+            startForResult.launch(
+                Intent(Intent.ACTION_VIEW, Uri.parse(url)).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+            )
+        } catch (activityNotFound: ActivityNotFoundException) {
+            alert("The link need browser to open. \n Please Download browser and try again") {
+                neutralPressed("PLAYSTORE") {
+                    playStoreRequest.launch(playStoreIntent)
+                    it.dismiss()
+                }
             }
         }
     }
 
-    private fun createMock(payAmount: Float, userId: Long, rentingTranId: Long): String {
-        return """{
-                     pay_amount : $payAmount ",
-                     paid_date_time : "",
-                     user_id: $userId,
-                     renting_transaction_id: "$rentingTranId"
-                  }"""
+    private fun setFlashlightViewState(isEnable: Boolean) {
+        if(isEnable)
+            binding.ivFlashSwitch.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_flash_off))
+        else
+            binding.ivFlashSwitch.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_flash_on))
     }
 }

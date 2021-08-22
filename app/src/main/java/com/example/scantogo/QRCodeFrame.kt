@@ -7,16 +7,18 @@ import android.os.Build
 import android.util.AttributeSet
 import android.view.View
 import androidx.annotation.RequiresApi
-import androidx.core.graphics.BlendModeColorFilterCompat
-import androidx.core.graphics.BlendModeCompat
 import com.example.scantogo.extensions.toAlphaPercentage
 import com.example.scantogo.extensions.toDP
 
 @RequiresApi(Build.VERSION_CODES.Q)
-class QRCodeFrame: View {
-    constructor(context: Context): super(context)
-    constructor(context: Context, attributes: AttributeSet): super(context, attributes)
-    constructor(context: Context, attributes: AttributeSet, defStylesRes: Int): super(context, attributes, defStylesRes)
+class QRCodeFrame : View {
+    constructor(context: Context) : super(context)
+    constructor(context: Context, attributes: AttributeSet) : super(context, attributes)
+    constructor(context: Context, attributes: AttributeSet, defStylesRes: Int) : super(
+        context,
+        attributes,
+        defStylesRes
+    )
 
     private val QR_HEIGHT_OFFSET = 120f.toDP()
     private val QR_WIDHT_OFFSET = 120f.toDP()
@@ -28,13 +30,16 @@ class QRCodeFrame: View {
         }
     }
 
-    private val backgroundLayerPaint: Paint by lazy {
-        Paint().apply {
-            color = Color.BLACK
-            style = Paint.Style.FILL
-            alpha = 60.toAlphaPercentage()
-        }
+    var backgroundLayerPaint = Paint().apply {
+        color = Color.BLACK
+        style = Paint.Style.FILL
+        alpha = 60.toAlphaPercentage()
     }
+        set(value) {
+            field = value
+            invalidate()
+        }
+
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
@@ -51,7 +56,7 @@ class QRCodeFrame: View {
                 QR_HEIGHT_OFFSET,
                 width / 2f + QR_WIDHT_OFFSET,
                 QR_HEIGHT_OFFSET * 3,
-                20.toDP(),
+                20f.toDP(),
                 20f.toDP(),
                 qrFramePaint
             )
