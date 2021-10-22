@@ -2,7 +2,7 @@
 The project is a QRCode Scanner created from CameraX + MLKit from google. 
 
 ## Features
-Shows Examples CameraX & MLKit combined to create QRScanner. 
+Shows Examples CameraX & MLKit combined to create QRScanner.  
 The QR Can be scanned via image chosen or be shared from other app.
 
 ## API Reference
