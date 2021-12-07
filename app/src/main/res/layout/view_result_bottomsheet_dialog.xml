@@ -1,40 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_result_rounded_corner"
     android:orientation="vertical">
 
     <ImageView
         android:id="@+id/ivSwipeDownIcon"
         android:layout_width="wrap_content"
-        android:layout_height="28dp"
+        android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
+        android:layout_marginTop="10dp"
         android:adjustViewBounds="true"
-        app:srcCompat="@drawable/ic_bottomsheet_swipe_down" />
+        android:src="@drawable/ic_sheet_top_indicator"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:cardBackgroundColor="@color/viewBasePrimaryInverse"
-        android:layout_marginHorizontal="20dp"
-        android:layout_marginVertical="20dp"
-        android:layout_marginTop="18dp"
-        app:cardCornerRadius="10dp">
+    <TextView
+        android:id="@+id/tvContent"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="14dp"
+        android:layout_marginTop="4dp"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Headline6"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/ivSwipeDownIcon"
+        tools:text="Content: " />
 
-        <TextView
-            android:id="@+id/tvContent"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:textAlignment="center"
-            android:paddingVertical="20dp"
-            android:layout_gravity="center_horizontal"
-            android:textAppearance="@style/TextAppearance.MaterialComponents.Headline4"
-            android:textIsSelectable="true"
-            android:textSize="28sp"
-            tools:text="Content" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvContacts"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="14dp"
+        android:clipToPadding="false"
+        android:overScrollMode="never"
+        android:paddingHorizontal="18dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvContent"
+        tools:itemCount="3"
+        tools:listitem="@layout/view_result_item" />
 
-    </com.google.android.material.card.MaterialCardView>
-
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
