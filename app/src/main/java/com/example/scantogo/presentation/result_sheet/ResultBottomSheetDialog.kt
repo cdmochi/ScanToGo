@@ -5,22 +5,27 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import androidx.core.view.isVisible
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.scantogo.MainActivity
 import com.example.scantogo.R
 import com.example.scantogo.databinding.ViewResultBottomsheetDialogBinding
+import com.example.scantogo.extensions.toDP
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
-import kotlin.math.abs
 
 class ResultBottomSheetDialog : BottomSheetDialogFragment() {
 
     companion object {
-        fun newInstance(qrContent: String): ResultBottomSheetDialog =
+        const val EMAIL_TAG = "ResultBottomSheetDialogEmailType"
+        const val SMS_TAG = "ResultBottomSheetDialogSmsType"
+        const val TEXT_TAG = "ResultBottomSheetDialogTextType"
+
+        fun newInstance(contents: Array<String>, contentType: String): ResultBottomSheetDialog =
             ResultBottomSheetDialog().apply {
                 arguments = Bundle().apply {
-                    putString("qrContent", qrContent)
+                    putStringArray("contents", contents)
+                    putString("contentType", contentType)
                 }
             }
     }
@@ -31,20 +36,14 @@ class ResultBottomSheetDialog : BottomSheetDialogFragment() {
     private val bottomSheetBehaviorCallback: BottomSheetBehavior.BottomSheetCallback by lazy {
         object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {}
-            override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                if (isAdded) {
-                    animationBottomSheetArrow(slideOffset)
-                }
-            }
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {}
         }
     }
-    private val qrContent: String by lazy { arguments?.getString("qrContent") ?: "" }
+    private val contents: MutableList<String> by lazy { arguments?.getStringArray("contents")?.toMutableList() ?: mutableListOf() }
 
-    override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
+    private val contentType: String by lazy { arguments?.getString("contentType") ?: "" }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = ViewResultBottomsheetDialogBinding.inflate(LayoutInflater.from(context))
         return binding.root
     }
@@ -53,28 +52,33 @@ class ResultBottomSheetDialog : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
         activity?.let {
             initViews()
-            dialog?.apply {
-                setOnShowListener {
-                    validateBottomSheet()
-                }
-
-                setOnDismissListener {
-                    (requireActivity() as MainActivity).run { startCamera() }
-                }
-            }
+            initListener()
         }
     }
 
     private fun initViews() {
-        with(binding) {
-            tvContent.isVisible = true
-            tvContent.text = qrContent
+        binding.tvContent.text = getString(R.string.barcode_content_type, contentType)
+        with(binding.rvContacts) {
+            layoutManager = LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false)
+            adapter = ResultAdapter(
+                contents = contents,
+                onCopyListener = {
+                    (requireActivity() as MainActivity).onContentCopy(it)
+                }
+            )
+            addItemDecoration(VerticalSpaceDivider(verticalSpaceHeight = 8.toDP()))
         }
     }
 
-    private fun animationBottomSheetArrow(slideOffSet: Float) {
-        with(binding) {
-            ivSwipeDownIcon.rotationX = (180 + (180 * slideOffSet))
+    private fun initListener() {
+        dialog?.apply {
+            setOnShowListener {
+                validateBottomSheet()
+            }
+
+            setOnDismissListener {
+                (requireActivity() as MainActivity).onDismiss()
+            }
         }
     }
 
@@ -94,15 +98,18 @@ class ResultBottomSheetDialog : BottomSheetDialogFragment() {
 
     private fun setHeight(view: View) {
         view.layoutParams = view.layoutParams.apply {
-            height = WindowManager.LayoutParams.MATCH_PARENT
+            height = WindowManager.LayoutParams.WRAP_CONTENT
         }
     }
-
-
 
     override fun onDestroyView() {
         _binding = null
         super.onDestroyView()
+    }
+
+    interface OnDismissedListener {
+        fun onDismiss()
+        fun onContentCopy(content: String)
     }
 
     override fun getTheme() = R.style.ResultBottomSheetDialog

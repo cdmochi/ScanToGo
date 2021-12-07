@@ -3,4 +3,13 @@
     <string name="action_to_perform_scan_hint">ACTION WHEN QR SCANNED</string>
     <string name="ok_button_text">OK</string>
     <string name="no_permission_text">Camera Permission Required</string>
+    <string name="barcode_content_type">Content: %1$s</string>
+    <string name="email_template_to_text">To: %1$s</string>
+    <string name="email_template_subject_text">Subject: %1$s</string>
+    <string name="email_template_description_text">Text: %1$s</string>
+    <string name="sms_template_phone_text">Phone: %1$s</string>
+    <string name="sms_template_message_text">Message: %1$s</string>
+    <string name="general_content_copied_text">Content Copied!</string>
+    <string name="general_image_not_found_message_text">Image file required</string>
+
 </resources>

@@ -9,4 +9,12 @@
         <item name="bottomSheetStyle">@style/ResultBottomSheet</item>
         <item name="android:windowSoftInputMode">adjustResize|stateVisible</item>
     </style>
+
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen" >
+        <item name="windowSplashScreenBackground">@color/viewBasePrimary</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_round</item>
+        <item name="windowSplashScreenAnimationDuration">100</item>
+        <item name="postSplashScreenTheme">@style/Theme.ScanToGo</item>
+    </style>
+
 </resources>

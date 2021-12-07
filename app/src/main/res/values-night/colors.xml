@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="viewBasePrimary">#121212</color>
+    <color name="lineBasePrimary">#616161</color>
+    <color name="viewBasePrimary">#212121</color>
     <color name="viewBasePrimaryInverse">#ECECEC</color>
 </resources>

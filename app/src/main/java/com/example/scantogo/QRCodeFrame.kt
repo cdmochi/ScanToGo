@@ -14,11 +14,7 @@ import com.example.scantogo.extensions.toDP
 class QRCodeFrame : View {
     constructor(context: Context) : super(context)
     constructor(context: Context, attributes: AttributeSet) : super(context, attributes)
-    constructor(context: Context, attributes: AttributeSet, defStylesRes: Int) : super(
-        context,
-        attributes,
-        defStylesRes
-    )
+    constructor(context: Context, attributes: AttributeSet, defStylesRes: Int) : super(context, attributes, defStylesRes)
 
     private val QR_HEIGHT_OFFSET = 120f.toDP()
     private val QR_WIDHT_OFFSET = 120f.toDP()
